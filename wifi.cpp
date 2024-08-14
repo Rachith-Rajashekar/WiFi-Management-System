@@ -1,56 +1,41 @@
 #include "wifi.h"
+#include <iostream>
 
-
-WiFi::WiFi(){}
-
-WiFi::WiFi(int wifiNumber, int wifiSignalStrength, const std::string& wifiName, const std::string& wifiPassword, const std::string& wifiStatus):
-    m_wifiNumber(wifiNumber),
-    m_wifiSignalStrength(wifiSignalStrength),
-    m_wifiName(wifiName),
-    m_wifiPassword(wifiPassword),
-    m_wifiStatus(wifiStatus) {}
+WiFi::WiFi(const std::string& ssid, const std::string& signalStrength,
+           const std::string& security, const std::string& status)
+    : m_wifiSSID(ssid), m_wifiSignalStrength(signalStrength),
+    m_wifiSecurity(security), m_wifiStatus(status) {}
 
 WiFi::~WiFi() {}
 
-int WiFi::getWiFiNumber() const
-{
-    return m_wifiNumber;
+std::string WiFi::getSSID() const{
+    return m_wifiSSID;
 }
-
-std::string WiFi::getWiFiName() const {
-    return m_wifiName;
+std::string WiFi::getSignalStrength() const {
+    return m_wifiSignalStrength;
 }
-
-std::string WiFi::getWiFiPassword() const {
+std::string WiFi::getSecurity() const {
+    return m_wifiSecurity;
+}
+std::string WiFi::getStatus() const {
+    return m_wifiStatus;
+}
+std::string WiFi::getPassword() const {
     return m_wifiPassword;
 }
 
-int WiFi::getWiFiSignalStrength() const {
-    return m_wifiSignalStrength;
+void WiFi::setSSID(const std::string& ssid) {
+    m_wifiSSID = ssid;
 }
-
-std::string WiFi::getWiFiStatus() const {
-    return m_wifiStatus;
+void WiFi::setSignalStrength(const std::string& signalStrength) {
+    m_wifiSignalStrength = signalStrength;
 }
-
-void WiFi::setWiFiNumber(const int wifiNumber){
-    this->m_wifiNumber = wifiNumber;
+void WiFi::setSecurity(const std::string& security) {
+    m_wifiSecurity = security;
 }
-
-void WiFi::setWiFiName(const std::string &wifiName)
-{
-    this->m_wifiName = wifiName;
+void WiFi::setStatus(const std::string& status) {
+    m_wifiStatus = status;
 }
-
-void WiFi::setWiFiSignalStrength(const int wifiSignalStrength)
-{
-    this->m_wifiSignalStrength = wifiSignalStrength;
-}
-
-void WiFi::setWiFiPassword(const std::string& wifiPassword) {
-    this->m_wifiPassword = wifiPassword;
-}
-
-void WiFi::setWiFiStatus(const std::string& wifiStatus) {
-    this->m_wifiStatus = wifiStatus;
+void WiFi::setPassword(const std::string& password) {
+    m_wifiPassword = password;
 }

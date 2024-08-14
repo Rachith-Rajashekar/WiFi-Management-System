@@ -1,23 +1,30 @@
-#ifndef WIFI_MANAGER_H
-#define WIFI_MANAGER_H
+#ifndef WIFIMANAGER_H
+#define WIFIMANAGER_H
 
 #include <vector>
 #include "wifi.h"
-
+#include "wifiloader.h"
+#include "savedwifi.h"
 
 class WiFiManager {
-private:
-    std::vector<WiFi> m_wifiList;
-    WiFi* findWiFiByNumber(const int number);
 public:
     WiFiManager();
     ~WiFiManager();
+    void enableWiFi();
+    void disableWiFi();
+    void retrieveWiFiNetworks();
+    void displayWiFiNetworks() const;
+    void connectToWiFi(size_t index);
+    void sortWiFiNetworks();
+    size_t getNumberOfNetworks() const;
 
-    void loadWiFiDetails(const WiFi &wifi);
-    void displayWiFiList() const;
-    void sortWiFiList();
-    void connectToWiFi();
+private:
+    std::vector<WiFi*> m_wifiNetworks;
+    WiFiLoader m_wifiLoader;
+    SavedWiFi savedwifi;
+
+
+    std::string formatColumn(const std::string& str, size_t width) const;
 };
 
 #endif
-

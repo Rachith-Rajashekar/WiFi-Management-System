@@ -1,104 +1,144 @@
-#include <iostream>
-#include <vector>
 #include "wifimanager.h"
-#include "wifi.h"
-#include "wififilemanager.h"
+#include <iostream>
+#include "savedwifi.h"
 
-WiFiManager::WiFiManager() {}
+WiFiManager::WiFiManager(){}
 
-WiFiManager::~WiFiManager()
-{
-    std::cout << "WiFiManager Destructor Called" << std::endl;
-}
-
-void WiFiManager::loadWiFiDetails(const WiFi &wifi)
-{
-    m_wifiList.push_back(wifi);
-}
-
-void WiFiManager::displayWiFiList() const {
-    for (const WiFi& wifi : m_wifiList) {
-        std::cout << "WiFi Number: " << wifi.getWiFiNumber()
-                  << " | WiFi Name: " << wifi.getWiFiName()
-                  << " | Signal Strength: " << wifi.getWiFiSignalStrength()
-                  << " | Status: " << wifi.getWiFiStatus() << std::endl;
+WiFiManager::~WiFiManager(){
+    for (WiFi* wifi : m_wifiNetworks) {
+        delete wifi;
     }
 }
 
-void WiFiManager::sortWiFiList()
-{
-    for (size_t firstIndex = 0; firstIndex < m_wifiList.size() - 1; ++firstIndex) {
-        for (size_t secondIndex = 0; secondIndex < m_wifiList.size() - firstIndex - 1; ++secondIndex) {
-            bool swap = false;
-            if (m_wifiList[secondIndex].getWiFiStatus() == "available" && m_wifiList[secondIndex + 1].getWiFiStatus() == "connected") {
-                swap = true;
-            } else if (m_wifiList[secondIndex].getWiFiStatus() == "saved" && m_wifiList[secondIndex + 1].getWiFiStatus() == "connected") {
-                swap = true;
-            } else if (m_wifiList[secondIndex].getWiFiStatus() == "available" && m_wifiList[secondIndex + 1].getWiFiStatus() == "saved") {
-                swap = true;
-            } else if (m_wifiList[secondIndex].getWiFiStatus() == m_wifiList[secondIndex + 1].getWiFiStatus()) {
-                swap = m_wifiList[secondIndex].getWiFiSignalStrength() < m_wifiList[secondIndex + 1].getWiFiSignalStrength();
-            }
+void WiFiManager::enableWiFi(){
+    std::string  wifiEnableCommand = "nmcli radio wifi on";
+    int result = system(wifiEnableCommand.c_str());
 
-            if (swap) {
-                std::swap(m_wifiList[secondIndex], m_wifiList[secondIndex + 1]);
-            }
-
-            if (m_wifiList[secondIndex].getWiFiNumber() > m_wifiList[secondIndex + 1].getWiFiNumber()){
-                int temperoryNumber = m_wifiList[secondIndex].getWiFiNumber();
-                m_wifiList[secondIndex].setWiFiNumber(m_wifiList[secondIndex + 1].getWiFiNumber());
-                m_wifiList[secondIndex + 1].setWiFiNumber(temperoryNumber) ;
-            }
-        }
-    }
-}
-
-
-WiFi* WiFiManager::findWiFiByNumber(const int number)
-{
-
-    for (WiFi& wifi : m_wifiList) {
-        if (wifi.getWiFiNumber() == number) {
-            return &wifi;
-        }
-    } return nullptr;
-}
-
-
-void WiFiManager::connectToWiFi()
-{
-    int userInput;
-    std::cout << "Enter Wifi Number : ";
-    std::cin >> userInput;
-    WiFi* wifiToConnect = findWiFiByNumber(userInput);
-
-    if (wifiToConnect)
-    {
-        if (wifiToConnect->getWiFiStatus() == "available") {
-            std::string password;
-
-            std::cout << "Enter password for " << wifiToConnect->getWiFiName() << ": ";
-            std::cin >> password;
-            if(wifiToConnect->getWiFiPassword() == password){
-                std::cout << "Connected" << std::endl;
-
-            } else {
-                std::cout << "Incorrect Password" << std::endl;
-                return;
-            }
-        }
-
-        for (WiFi& wifi : m_wifiList)
-        {
-            if (wifi.getWiFiStatus() == "connected")
-            {
-                wifi.setWiFiStatus("saved");
-            }
-        }
-        wifiToConnect->setWiFiStatus("connected");
-        sortWiFiList();
+    if (result == 0) {
+        std::cout << "WiFi has been enabled successfully." << std::endl;
     } else {
-        std::cout << "WiFi number not found." << std::endl;
+        std::cerr << "Failed to enable WiFi. Exit code: " << result << std::endl;
     }
 }
 
+void WiFiManager::disableWiFi(){
+    std::string wifiDisableCommand = "nmcli radio wifi off";
+    int result = system(wifiDisableCommand.c_str());
+
+    if (result == 0) {
+        std::cout << "WiFi has been disabled successfully." << std::endl;
+    } else {
+        std::cerr << "Failed to disable WiFi. Exit code: " << result << std::endl;
+    }
+}
+
+void WiFiManager::retrieveWiFiNetworks(){
+    m_wifiNetworks = m_wifiLoader.loadWiFiNetworks();
+
+}
+
+void WiFiManager::displayWiFiNetworks() const {
+
+
+    const size_t serialWidth = 5;
+    const size_t ssidWidth = 30;
+    const size_t signalStrengthWidth = 20;
+    const size_t securityWidth = 15;
+    const size_t statusWidth = 15;
+
+    std::cout << "\nAvailable WiFi Networks:\n";
+    std::cout << "--------------------------------------------------------------------------------\n";
+    std::cout << formatColumn("No.", serialWidth)
+              << formatColumn("SSID", ssidWidth)
+              << formatColumn("Signal-Strength", signalStrengthWidth)
+              << formatColumn("Security", securityWidth)
+              << formatColumn("Status", statusWidth)
+              << "\n--------------------------------------------------------------------------------\n";
+
+    for (size_t index = 0; index < m_wifiNetworks.size(); ++index) {
+
+        const WiFi* network = m_wifiNetworks[index];
+        std::cout << formatColumn(std::to_string(index + 1), serialWidth)
+                  << formatColumn(network->getSSID(), ssidWidth)
+                  << formatColumn(network->getSignalStrength(), signalStrengthWidth)
+                  << formatColumn(network->getSecurity(), securityWidth)
+                  << formatColumn(network->getStatus(), statusWidth)
+                  << '\n';
+    }
+}
+
+void WiFiManager::connectToWiFi(size_t index) {
+
+    if (index < 1 || index > m_wifiNetworks.size()) {
+        std::cerr << "Invalid choice. Please enter a valid number." << std::endl;
+        return;
+    }
+
+    WiFi* selectedNetwork = m_wifiNetworks[index - 1];
+
+    if (selectedNetwork->getStatus() == "Connected") {
+        std::cout << "You are already connected to " << selectedNetwork->getSSID() << std::endl;
+        return;
+    }
+
+    if (selectedNetwork->getStatus() == "Saved") {
+        std::string wifiConnectionCommand = "sudo nmcli dev wifi connect '" + selectedNetwork->getSSID() + "' password '" + selectedNetwork->getPassword() + "'";
+        int result = std::system(wifiConnectionCommand.c_str());
+
+        if (result == 0) {
+            std::cout << "Successfully connected to " << selectedNetwork->getSSID() << std::endl;
+            selectedNetwork->setStatus("Connected");
+        } else {
+            std::cerr << "Failed to connect to " << selectedNetwork->getSSID() << std::endl;
+        }
+        return;
+    }
+
+    std::cout << "Enter the password for " << selectedNetwork->getSSID() << ": ";
+    std::string password;
+    std::getline(std::cin, password);
+    selectedNetwork->setPassword(password);
+
+    std::string wifiConnectionCommand = "sudo nmcli dev wifi connect '" + selectedNetwork->getSSID() + "' password '" + selectedNetwork->getPassword() + "'";
+    int result = std::system(wifiConnectionCommand.c_str());
+
+
+    if (result == 0) {
+        std::cout << "Successfully connected to " << selectedNetwork->getSSID() << std::endl;
+        selectedNetwork->setStatus("Connected");
+        savedwifi.saveWiFi(*selectedNetwork);
+    } else {
+        std::cerr << "Failed to connect to " << selectedNetwork->getSSID() << std::endl;
+        selectedNetwork->setPassword("");
+    }
+}
+
+void WiFiManager::sortWiFiNetworks()
+{
+    for (size_t firstIndex = 0; firstIndex < m_wifiNetworks.size() - 1; ++firstIndex) {
+        for (size_t secondIndex = 0; secondIndex < m_wifiNetworks.size() - firstIndex - 1; ++secondIndex) {
+            bool swap = false;
+            if (m_wifiNetworks[secondIndex]->getStatus() == "Available" && m_wifiNetworks[secondIndex + 1]->getStatus() == "Connected") {
+                swap = true;
+            } else if (m_wifiNetworks[secondIndex]->getStatus() == "Saved" && m_wifiNetworks[secondIndex + 1]->getStatus() == "Connected") {
+                swap = true;
+            } else if (m_wifiNetworks[secondIndex]->getStatus() == "Available" && m_wifiNetworks[secondIndex + 1]->getStatus() == "Saved") {
+                swap = true;
+            }
+            if (swap) {
+                std::swap(m_wifiNetworks[secondIndex], m_wifiNetworks[secondIndex + 1]);
+            }
+        }
+    }
+}
+
+size_t WiFiManager::getNumberOfNetworks() const {
+    return m_wifiNetworks.size();
+}
+
+std::string WiFiManager::formatColumn(const std::string& str, size_t width) const {
+    if (str.length() > width) {
+        return str.substr(0, width - 3) + "...";
+    }
+    return str + std::string(width - str.length(), ' ');
+}

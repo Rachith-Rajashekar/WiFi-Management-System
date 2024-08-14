@@ -1,30 +1,31 @@
-#ifndef WiFi_H
-#define WiFi_H
-#include <iostream>
+#ifndef WIFI_H
+#define WIFI_H
+
 #include <string>
 
 class WiFi {
-private:
-    int m_wifiNumber, m_wifiSignalStrength;
-    std::string m_wifiName;
-    std::string m_wifiStatus;
-    std::string m_wifiPassword;
 public:
-    WiFi();
-    WiFi(int wifiNumber, int wifiSignalStrength,const std::string& wifiName, const std::string& wifiPassword, const std::string& wifiStatus);
+    WiFi(const std::string& ssid = "", const std::string& signalStrength = "",
+         const std::string& security = "", const std::string& status = "");
     ~WiFi();
 
-    int getWiFiNumber() const;
-    std::string getWiFiName() const;
-    std::string getWiFiPassword() const;
-    int getWiFiSignalStrength() const;
-    std::string getWiFiStatus() const;
+    std::string getSSID() const;
+    std::string getSignalStrength() const;
+    std::string getSecurity() const;
+    std::string getStatus() const;
+    std::string getPassword() const;
 
-    void setWiFiNumber(const int wifiNumber);
-    void setWiFiName( const std::string& wifiName);
-    void setWiFiPassword(const std::string& wifiPassword);
-    void setWiFiSignalStrength(const int wifiSignalStrength);
-    void setWiFiStatus(const std::string& wifiStatus);
+    void setSSID(const std::string& ssid);
+    void setSignalStrength(const std::string& signalStrength);
+    void setSecurity(const std::string& security);
+    void setStatus(const std::string& status);
+    void setPassword(const std::string& password);
+private:
+    std::string m_wifiSSID;
+    std::string m_wifiSignalStrength;
+    std::string m_wifiSecurity;
+    std::string m_wifiStatus;
+    std::string m_wifiPassword;
 };
 
 #endif
