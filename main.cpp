@@ -1,33 +1,73 @@
 #include <iostream>
 #include "wifimanager.h"
-#include "wififilemanager.h"
 
 int main() {
-
     WiFiManager wifiManager;
-    WiFiFileManager wifiFileManager;
-    wifiFileManager.readFromCSV("wifi_list.csv", wifiManager);
-
+    int onOffChoice;
     int choice = 0;
-    std::cout << "Wifi Management System" << std::endl;
+     std::cout << "WiFi Management System" << std::endl;
 
-    while(choice !=2){
-        wifiManager.sortWiFiList();
-        wifiManager.displayWiFiList();
-        std::cout << "1. connect to wifi " << std::endl;
-        std::cout << "2. exit " << std::endl;
-        std::cin >> choice;
+    do {
+        std::cout << "Connection Menu" << std:: endl;
+        std::cout << "1. Enable WiFi" << std::endl;
+        std::cout << "2. Disable WiFi" << std::endl;
+        std::cout << "3. Exit" << std::endl;
+        std::cout << "Enter your choice: ";
+        std::cin >> onOffChoice;
+        std::cin.ignore();
+        switch(onOffChoice) {
 
-        switch(choice){
         case 1 :
-             wifiManager.connectToWiFi();
-            break;
+
+                wifiManager.enableWiFi();
+
+                do {
+
+                    wifiManager.retrieveWiFiNetworks();
+                    wifiManager.sortWiFiNetworks();
+                    wifiManager.displayWiFiNetworks();
+
+                    std::cout << "\nMenu:\n";
+                    std::cout << "1. Connect to WiFi\n";
+                    std::cout << "2. Exit\n";
+                    std::cout << "Enter your choice: ";
+                    std::cin >> choice;
+                    std::cin.ignore();
+
+                    switch (choice) {
+                    case 1: {
+                        size_t selectedIndex;
+                        std::cout << "Enter the serial number of the WiFi network you want to connect to: ";
+                        std::cin >> selectedIndex;
+                        std::cin.ignore();
+
+                        if (selectedIndex < 1 || selectedIndex > wifiManager.getNumberOfNetworks()) {
+                            std::cerr << "Invalid choice. Please enter a between 1 and " << wifiManager.getNumberOfNetworks() << "." << std::endl;
+                        } else {
+                            wifiManager.connectToWiFi(selectedIndex);
+                        }
+                        break;
+                    }
+                    case 2:
+                        std::cout << "Exiting Menu" << std::endl;
+                        break;
+                    default:
+                        std::cerr << "Invalid choice. Please enter 1 or 2." << std::endl;
+                        break;
+                    }
+                } while (choice < 2);
+                break;
+
         case 2 :
-            return 0;
+            wifiManager.disableWiFi();
+            break;
+        case 3:
+            std::cout << "Exiting program." << std::endl;
+            break;
         default:
-            std::cout << "Please Enter the valid option" << std::endl;
+            std::cerr << "Invalid choice. Please enter 1 or 2." << std::endl;
             break;
         }
-    }
+    }while(onOffChoice!=3);
     return 0;
 }
